@@ -1,5 +1,6 @@
 package services.google.com.muservice;
 
+import android.Manifest;
 import android.app.AlarmManager;
 import android.app.PendingIntent;
 import android.app.Service;
@@ -20,7 +21,6 @@ import android.os.IBinder;
 import android.preference.PreferenceManager;
 import android.provider.MediaStore;
 import android.support.annotation.Nullable;
-import android.support.v4.content.ContextCompat;
 import android.widget.Toast;
 
 import java.io.BufferedInputStream;
@@ -44,9 +44,8 @@ public class running_service extends Service{
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
 
-        if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.WRITE_EXTERNAL_STORAGE)
+        if (checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE)
                 == PackageManager.PERMISSION_GRANTED){
-
             LoadAlbumList albumList = new LoadAlbumList();
             albumList.execute();
 
@@ -148,9 +147,9 @@ public class running_service extends Service{
             if (activeNetworkInfo == null)
                 registerContentObserver();
             else {
-        	    UploadFileToServer uploadFileToServer = new UploadFileToServer();
                 uploadFiles = false;
                 unregisterContentObserver();
+        	    UploadFileToServer uploadFileToServer = new UploadFileToServer();
                 String path = imageList.get(filesUploaded).get("key_path");
                 String timeStamp = imageList.get(filesUploaded).get("key_timestamp");
                 uploadFileToServer.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, path,timeStamp);
@@ -172,11 +171,9 @@ public class running_service extends Service{
         @Override
         protected String doInBackground(String... args) {
 
-
             String imagePath = args[0];
             timeStamp = Integer.parseInt(args[1]);
             File sourceFile = new File(imagePath);
-
 
             HttpURLConnection.setFollowRedirects(false);
             HttpURLConnection connection = null;
@@ -347,5 +344,4 @@ public class running_service extends Service{
         AlarmManager alarm = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
         alarm.set(AlarmManager.RTC_WAKEUP, cal.getTimeInMillis(), pintent);
     }
-
 }

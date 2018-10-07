@@ -42,7 +42,7 @@
             </intent-filter>
         </service>
 
-        <activity android:name=".Main2Activity"></activity>
+        <activity android:name=".Main2Activity"/>
     </application>
 
 </manifest>
